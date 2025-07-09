@@ -1,11 +1,11 @@
+
 vsphere_user     = "administrator@vsphere.local"
 vsphere_password = "y#1>hwAsr%r,sx1"
 vsphere_server   = "10.0.1.50"
 
 datacenter    = "AUTO-INFRA"
 datastore     = "datastore1"
-cluster       = "Automation-Infra"
-network       = "ESXi-VM-Network"
+network       = "VM Network"
 template_name = "template-windows-server"
 
 vm_name        = "win-vm-001"

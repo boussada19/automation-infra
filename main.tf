@@ -15,8 +15,8 @@ data "vsphere_datastore" "datastore" {
   datacenter_id = data.vsphere_datacenter.dc.id
 }
 
-data "vsphere_compute_cluster" "cluster" {
-  name          = var.cluster
+data "vsphere_host" "esxi_host" {
+  name          = "10.1.1.10"
   datacenter_id = data.vsphere_datacenter.dc.id
 }
 
@@ -32,7 +32,7 @@ data "vsphere_virtual_machine" "template" {
 
 resource "vsphere_virtual_machine" "vm" {
   name             = var.vm_name
-  resource_pool_id = data.vsphere_compute_cluster.cluster.resource_pool_id
+  resource_pool_id = data.vsphere_host.esxi_host.resource_pool_id
   datastore_id     = data.vsphere_datastore.datastore.id
 
   num_cpus = var.vm_cpu
@@ -53,24 +53,5 @@ resource "vsphere_virtual_machine" "vm" {
 
   clone {
     template_uuid = data.vsphere_virtual_machine.template.id
-
-    customize {
-      windows_options {
-        computer_name         = var.vm_name
-        admin_password        = var.admin_password
-        time_zone             = 4
-        workgroup             = "WORKGROUP"
-        run_once_command_list = [
-          "net user Administrator ${var.admin_password}"
-        ]
-      }
-
-      network_interface {
-        ipv4_address = var.vm_ip
-        ipv4_netmask = 24
-      }
-
-      ipv4_gateway = var.vm_gateway
-    }
   }
 }
