@@ -5,36 +5,36 @@ provider "vsphere" {
   allow_unverified_ssl = true
 }
 
-# 1. Datacenter
+# Datacenter
 data "vsphere_datacenter" "dc" {
   name = "AUTO-INFRA"
 }
 
-# 2. Datastore
+# Datastore
 data "vsphere_datastore" "datastore" {
   name          = "datastore1"
   datacenter_id = data.vsphere_datacenter.dc.id
 }
 
-# 3. ESXi Host (standalone, pas de cluster)
+# Hôte ESXi (standalone)
 data "vsphere_host" "esxi_host" {
   name          = "10.1.1.10"
   datacenter_id = data.vsphere_datacenter.dc.id
 }
 
-# 4. Réseau
+# Réseau
 data "vsphere_network" "network" {
   name          = "ESXi-VM-Network"
   datacenter_id = data.vsphere_datacenter.dc.id
 }
 
-# 5. Template (déjà prêt avec config IP/mot de passe)
+# Template (Windows Server par ex)
 data "vsphere_virtual_machine" "template" {
   name          = "template-windows-server"
   datacenter_id = data.vsphere_datacenter.dc.id
 }
 
-# 6. Déploiement de la VM depuis le template
+# VM à déployer
 resource "vsphere_virtual_machine" "vm" {
   name             = "win-vm-001"
   resource_pool_id = data.vsphere_host.esxi_host.resource_pool_id
@@ -51,13 +51,12 @@ resource "vsphere_virtual_machine" "vm" {
   }
 
   disk {
-    label            = "disk0"
+    label            = "Hard Disk 1"
     size             = data.vsphere_virtual_machine.template.disks[0].size
     thin_provisioned = data.vsphere_virtual_machine.template.disks[0].thin_provisioned
   }
 
   clone {
     template_uuid = data.vsphere_virtual_machine.template.id
-    # ❌ PAS DE BLOCK "customize" ici
   }
 }
