@@ -15,7 +15,7 @@ data "vsphere_datastore" "datastore" {
 }
 
 data "vsphere_host" "esxi_host" {
-  name          = var.esxi_host
+  name          = var.vsphere_host
   datacenter_id = data.vsphere_datacenter.dc.id
 }
 
@@ -38,11 +38,16 @@ resource "vsphere_virtual_machine" "vm" {
   memory   = var.vm_memory
   guest_id = data.vsphere_virtual_machine.template.guest_id
 
-  scsi_type = data.vsphere_virtual_machine.template.scsi_type
-
   network_interface {
     network_id   = data.vsphere_network.network.id
     adapter_type = data.vsphere_virtual_machine.template.network_interface_types[0]
+  }
+
+  disk {
+    label            = "disk0"
+    size             = data.vsphere_virtual_machine.template.disks.0.size
+    eagerly_scrub    = false
+    thin_provisioned = data.vsphere_virtual_machine.template.disks.0.thin_provisioned
   }
 
   clone {
