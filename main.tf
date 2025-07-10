@@ -1,52 +1,43 @@
-terraform {
-  required_providers {
-    vsphere = {
-      source  = "hashicorp/vsphere"
-      version = ">= 2.5.0" # Important pour activer la personnalisation
-    }
-  }
-}
-
 provider "vsphere" {
-  user                 = var.vsphere_user
-  password             = var.vsphere_password
-  vsphere_server       = var.vsphere_server
+  user                 = "administrator@vsphere.local"
+  password             = "y#1>hwAsr%r,sx1"
+  vsphere_server       = "10.0.1.50"
   allow_unverified_ssl = true
 }
 
-# 📍 Récupère le datacenter "AUTO-INFRA"
-data "vsphere_datacenter" "datacenter" {
+# 1. Datacenter
+data "vsphere_datacenter" "dc" {
   name = "AUTO-INFRA"
 }
 
-# 📦 Récupère le datastore "datastore1"
+# 2. Datastore
 data "vsphere_datastore" "datastore" {
   name          = "datastore1"
-  datacenter_id = data.vsphere_datacenter.datacenter.id
+  datacenter_id = data.vsphere_datacenter.dc.id
 }
 
-# 🧠 Récupère le cluster de calcul "automation-Infra"
-data "vsphere_compute_cluster" "cluster" {
-  name          = "Automation-Infra"
-  datacenter_id = data.vsphere_datacenter.datacenter.id
+# 3. ESXi Host (standalone, pas de cluster)
+data "vsphere_host" "esxi_host" {
+  name          = "10.1.1.10"
+  datacenter_id = data.vsphere_datacenter.dc.id
 }
 
-# 🌐 Récupère le réseau virtuel "VM Network"
+# 4. Réseau
 data "vsphere_network" "network" {
   name          = "ESXi-VM-Network"
-  datacenter_id = data.vsphere_datacenter.datacenter.id
+  datacenter_id = data.vsphere_datacenter.dc.id
 }
 
-# 📄 Récupère le template Windows existant "template-windows-server"
+# 5. Template (déjà prêt avec config IP/mot de passe)
 data "vsphere_virtual_machine" "template" {
   name          = "template-windows-server"
-  datacenter_id = data.vsphere_datacenter.datacenter.id
+  datacenter_id = data.vsphere_datacenter.dc.id
 }
 
-# 🚀 Création de la VM à partir du template
+# 6. Déploiement de la VM depuis le template
 resource "vsphere_virtual_machine" "vm" {
   name             = "win-vm-001"
-  resource_pool_id = data.vsphere_compute_cluster.cluster.resource_pool_id
+  resource_pool_id = data.vsphere_host.esxi_host.resource_pool_id
   datastore_id     = data.vsphere_datastore.datastore.id
 
   num_cpus = 2
@@ -60,27 +51,13 @@ resource "vsphere_virtual_machine" "vm" {
   }
 
   disk {
-    label            = "Hard Disk 1"
+    label            = "disk0"
     size             = data.vsphere_virtual_machine.template.disks[0].size
     thin_provisioned = data.vsphere_virtual_machine.template.disks[0].thin_provisioned
   }
 
   clone {
     template_uuid = data.vsphere_virtual_machine.template.id
-
-    customize {
-      windows_options {
-        computer_name  = "win-vm-001"
-        admin_password = var.admin_password
-        time_zone      = 004  # Tunis/Paris (GMT+1)
-      }
-
-      network_interface {
-        ipv4_address = var.vm_ip
-        ipv4_netmask = 24
-      }
-
-      ipv4_gateway = var.vm_gateway
-    }
+    # ❌ PAS DE BLOCK "customize" ici
   }
 }
