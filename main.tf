@@ -1,4 +1,3 @@
-
 provider "vsphere" {
   user                 = var.vsphere_user
   password             = var.vsphere_password
@@ -16,7 +15,7 @@ data "vsphere_datastore" "datastore" {
 }
 
 data "vsphere_host" "esxi_host" {
-  name          = "10.1.1.10"
+  name          = var.esxi_host
   datacenter_id = data.vsphere_datacenter.dc.id
 }
 
@@ -39,16 +38,11 @@ resource "vsphere_virtual_machine" "vm" {
   memory   = var.vm_memory
   guest_id = data.vsphere_virtual_machine.template.guest_id
 
+  scsi_type = data.vsphere_virtual_machine.template.scsi_type
+
   network_interface {
     network_id   = data.vsphere_network.network.id
     adapter_type = data.vsphere_virtual_machine.template.network_interface_types[0]
-  }
-
-  disk {
-    label            = "disk0"
-    size             = var.vm_disk
-    eagerly_scrub    = false
-    thin_provisioned = true
   }
 
   clone {
