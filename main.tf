@@ -45,12 +45,26 @@ resource "vsphere_virtual_machine" "vm" {
 
   disk {
     label            = "disk0"
-    size             = data.vsphere_virtual_machine.template.disks.0.size
+    size             = var.vm_disk
     eagerly_scrub    = false
-    thin_provisioned = data.vsphere_virtual_machine.template.disks.0.thin_provisioned
+    thin_provisioned = true
   }
 
   clone {
     template_uuid = data.vsphere_virtual_machine.template.id
+  }
+
+  customize {
+    windows_options {
+      computer_name  = var.vm_name
+      admin_password = var.admin_password
+    }
+
+    network_interface {
+      ipv4_address = var.vm_ip
+      ipv4_netmask = 24
+    }
+
+    ipv4_gateway = var.vm_gateway
   }
 }
