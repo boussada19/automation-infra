@@ -5,38 +5,38 @@ provider "vsphere" {
   allow_unverified_ssl = true
 }
 
-# Datacenter
+# 1. Datacenter AUTO-INFRA
 data "vsphere_datacenter" "dc" {
   name = "AUTO-INFRA"
 }
 
-# Datastore
+# 2. Datastore1
 data "vsphere_datastore" "datastore" {
   name          = "datastore1"
   datacenter_id = data.vsphere_datacenter.dc.id
 }
 
-# Hôte ESXi (standalone)
+# 3. Hôte ESXi (10.1.1.10)
 data "vsphere_host" "esxi_host" {
   name          = "10.1.1.10"
   datacenter_id = data.vsphere_datacenter.dc.id
 }
 
-# Réseau
+# 4. Réseau virtuel
 data "vsphere_network" "network" {
   name          = "ESXi-VM-Network"
   datacenter_id = data.vsphere_datacenter.dc.id
 }
 
-# Template (Windows Server par ex)
+# 5. Template Windows Server
 data "vsphere_virtual_machine" "template" {
   name          = "template-windows-server"
   datacenter_id = data.vsphere_datacenter.dc.id
 }
 
-# VM à déployer
+# 6. Création de la VM clonée
 resource "vsphere_virtual_machine" "vm" {
-  name             = "win-vm-001"
+  name             = "vm-from-template"
   resource_pool_id = data.vsphere_host.esxi_host.resource_pool_id
   datastore_id     = data.vsphere_datastore.datastore.id
 
@@ -51,7 +51,7 @@ resource "vsphere_virtual_machine" "vm" {
   }
 
   disk {
-    label            = "Hard Disk 1"
+    label            = "Disk0"
     size             = data.vsphere_virtual_machine.template.disks[0].size
     thin_provisioned = data.vsphere_virtual_machine.template.disks[0].thin_provisioned
   }
