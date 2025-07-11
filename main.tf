@@ -11,7 +11,7 @@ data "vsphere_datacenter" "dc" {
 }
 
 data "vsphere_datastore" "datastore" {
-  name          = "datastore-01"
+  name          = "datastore1"
   datacenter_id = data.vsphere_datacenter.dc.id
 }
 
@@ -26,7 +26,7 @@ data "vsphere_host" "host" {
 }
 
 data "vsphere_virtual_machine" "template" {
-  name          = "template-windows-server" # ton nom exact de template
+  name          = "Vm-Clonage" # ton nom exact de template
   datacenter_id = data.vsphere_datacenter.dc.id
 }
 
