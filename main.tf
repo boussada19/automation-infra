@@ -21,12 +21,12 @@ data "vsphere_network" "network" {
 }
 
 data "vsphere_host" "host" {
-  name          = "10.1.1.10" # adapte si nécessaire
+  name          = "10.1.1.10" # Adaptez si nécessaire
   datacenter_id = data.vsphere_datacenter.dc.id
 }
 
 data "vsphere_virtual_machine" "template" {
-  name          = "Vm-Clonage" # ton nom exact de template
+  name          = "Vm-Clonage" # Nom exact de votre template
   datacenter_id = data.vsphere_datacenter.dc.id
 }
 
@@ -36,15 +36,16 @@ resource "vsphere_virtual_machine" "vm" {
   resource_pool_id = data.vsphere_host.host.resource_pool_id
   datastore_id     = data.vsphere_datastore.datastore.id
 
-  num_cpus = 2
-  memory   = 2048
-  firmware = "efi"
-  guest_id = data.vsphere_virtual_machine.template.guest_id
+  num_cpus  = 2
+  memory    = 2048
+  firmware  = "efi"  # Vérifiez que le modèle utilise EFI, sinon changez à "bios"
+  guest_id  = data.vsphere_virtual_machine.template.guest_id
   scsi_type = data.vsphere_virtual_machine.template.scsi_type
 
   network_interface {
     network_id   = data.vsphere_network.network.id
-    adapter_type = data.vsphere_virtual_machine.template.network_interface_types[0]
+    adapter_type = "vmxnet3"  # Type d'adaptateur recommandé
+    connect_at_power_on = true  # Assure la connexion au démarrage
   }
 
   disk {
@@ -57,12 +58,12 @@ resource "vsphere_virtual_machine" "vm" {
     template_uuid = data.vsphere_virtual_machine.template.id
     customize {
       windows_options {
-        computer_name         = "wincloned"
-        admin_password        = "P@ssw0rd123!" # à sécuriser
-        workgroup             = "WORKGROUP"
-        time_zone             = 004 # UTC+1 (France/Tunisie)
-        auto_logon            = true
-        auto_logon_count      = 1
+        computer_name    = "wincloned"
+        admin_password   = var.admin_password  # Utilisation d'une variable sécurisée
+        workgroup        = "WORKGROUP"
+        time_zone        = 4  # UTC+1 (France/Tunisie)
+        auto_logon       = true
+        auto_logon_count = 1
       }
 
       network_interface {
@@ -70,7 +71,7 @@ resource "vsphere_virtual_machine" "vm" {
         ipv4_netmask = 24
       }
 
-      ipv4_gateway = "10.0.1.1"
+      ipv4_gateway    = "10.0.1.1"
       dns_server_list = ["10.0.1.70"]
     }
   }
